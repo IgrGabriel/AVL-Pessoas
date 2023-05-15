@@ -1,6 +1,6 @@
 #include <iostream>
 #include "node.h"
-#include "arq.h"
+#include "avl.h"
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -10,26 +10,26 @@ using namespace std;
 // retorna a altura do node.
 // se a arvore for vazia ela tem altura 0
 // caso contrario, retorna o valor que esta no campo height
-int height(Node *node) {
+int avl_tree::height(Node *node) {
     return (node == nullptr) ? 0 : node->height; 
 }
 
 
 // Atualiza o altura de um node
 // O node recebe a maior altura entre a subarvore da esquerda e da direita + 1
-int updateHeight(Node* node) {
+int avl_tree::updateHeight(Node* node) {
     return node->height = max(height(node->left), height(node->right)) + 1;
 }
 
 
 // Calcula o fator de balanceamento de um node
-int balance(Node *node) {
+int avl_tree::balance(Node *node) {
     return node ? height(node->left) - height(node->right) : 0;
 }
 
 
 // Rotacao a esquerda para balancear a arvore
-Node* leftRotation(Node *p) {
+Node* avl_tree::leftRotation(Node *p) {
     Node *u = p->right;
     p->right = u->left;
     u->left = p;
@@ -42,7 +42,7 @@ Node* leftRotation(Node *p) {
 
 
 // Rotacao a direita para balancear a arvore
-Node* rightRotation(Node *p) {
+Node* avl_tree::rightRotation(Node *p) {
     Node *u = p->left;
     p->left = u->right;
     u->right = p;
@@ -55,14 +55,14 @@ Node* rightRotation(Node *p) {
 
 
 // Rotacao direita esquerda
-Node* rightLeftRotation(Node *p){
+Node* avl_tree::rightLeftRotation(Node *p){
     p->right = rightRotation(p->right);
     return leftRotation(p);
 }
 
 
 // Rotacao esquerda direita
-Node* leftRightRotation(Node *p){
+Node* avl_tree::leftRightRotation(Node *p){
     p->left = leftRotation(p->left);
     return rightRotation(p);
 }
@@ -70,7 +70,7 @@ Node* leftRightRotation(Node *p){
 
 // Funcao para realizar o balanceamento da arvore apos uma insercao ou remorcao
 // Recebe o node que esta desbalanceado e retorna a nova raiz apos o balanceamento
-Node* rebalance(Node *node){
+Node* avl_tree::rebalance(Node *node){
     // calcula o balanceamento de p
     int bal = balance(node);
 
@@ -95,7 +95,7 @@ Node* rebalance(Node *node){
 
 
 // add com chave para o cpf
-Node* addCpf(Node *node, Pessoa *pessoa) {
+Node* avl_tree::addCpf(Node *node, Pessoa *pessoa) {
     if (node == nullptr)
         return new Node(pessoa);
     else{ // insercao a direita ou a esquerda
@@ -119,7 +119,7 @@ Node* addCpf(Node *node, Pessoa *pessoa) {
 // adicionar uma pessoa a arvore usando o nome como chave
 // TODO: Considerar a possibilidade de nomes duplicados
 // TODO: Considerar o sobrenome na busca (Nome Completo)
-Node* addNome(Node *node, Pessoa *pessoa) {
+Node* avl_tree::addNome(Node *node, Pessoa *pessoa) {
     if (node == nullptr)
         return new Node(pessoa);
     else{ // insercao a direita ou a esquerda
@@ -185,9 +185,12 @@ int dataCompare2(const Data& data1, const Data& data2) {
     
 }
 
+void avl_tree::add(Pessoa *pessoa) {
+    root = addData(root, pessoa);
+}
 
 // adicionar uma pessoa a arvore usando a data de nascimento como chave
-Node* addData(Node *node, Pessoa *pessoa) {
+Node* avl_tree::addData(Node *node, Pessoa *pessoa) {
     if (node == nullptr)
         return new Node(pessoa);
 
@@ -210,7 +213,7 @@ Node* addData(Node *node, Pessoa *pessoa) {
 
 
 // Remover uma pessoa da arvore usando o cpf com chave
-Node* remove(Node *node, int cpf) {
+Node* avl_tree::remove(Node *node, int cpf) {
     if(node == nullptr) // Node nao encontrado
         return nullptr;
     else { // procura o node a remover
@@ -260,7 +263,7 @@ Node* remove(Node *node, int cpf) {
 
 
 // Consulta uma unica pessoa na arvore pelo seu cpf e exibe os dados na tela
-Node* searchByCPF(Node *node, long long int cpf) {
+Node* avl_tree::searchByCPF(Node *node, long long int cpf) {
     if(node == nullptr) // arvore vazia
         return nullptr;
     else {  // procurar o cpf na arvore
@@ -280,7 +283,7 @@ Node* searchByCPF(Node *node, long long int cpf) {
 
 // Consulta todas as pessoa cujo nome comece com uma string informada pelo uduario
 // E exibe todos os dados dessas pessoas na forma de lista
-void listByName(Node *node, const string& prefixo) {
+void avl_tree::listByName(Node *node, const string& prefixo) {
     if(node == nullptr) // arvore vazia
         return;
     
@@ -298,7 +301,7 @@ void listByName(Node *node, const string& prefixo) {
 
 // Consulta todas as pessoas cuja a data de nascimento esteja em um intervalo estabelecido pelo usuario
 // E exibe todos os dados dessas pessoas na forma de lista
-void listIntervaloDtNascimento(Node *node, const Data& dtInicio, const Data& dtFinal){
+void avl_tree::listIntervaloDtNascimento(Node *node, const Data& dtInicio, const Data& dtFinal){
     if(node == nullptr) // arvore vazia
         return;
     
@@ -318,53 +321,133 @@ void listIntervaloDtNascimento(Node *node, const Data& dtInicio, const Data& dtF
 }
 
 
-void imprimirPessoa2(Pessoa *pessoa) {
-    cout << "Nome Completo: " << pessoa->nome << " " << pessoa->sobrenome << endl;
-    cout << "Numero de CPF: " << pessoa->cpf << endl; 
-    cout << "Cidade: " << pessoa->cidade << endl;
-    cout << "Data nascimento: " << pessoa->dt_nascimento.dia << "/" << pessoa->dt_nascimento.mes << "/" << pessoa->dt_nascimento.ano << endl;
+// Funcao publica para imprimir a arvore
+void avl_tree::show(){
+    show(root, 1);
 }
 
 
-void imprimirPessoa(Pessoa *pessoa) {
+// Imprime os dados de uma pessoa na tela
+void avl_tree::imprimirPessoa(Pessoa *pessoa) {
     cout << pessoa->nome << " " << pessoa->sobrenome;
     cout << " - " << pessoa->cpf; 
     cout << " - " << pessoa->cidade;
     cout << " - " << pessoa->dt_nascimento.dia << "/" << pessoa->dt_nascimento.mes << "/" << pessoa->dt_nascimento.ano << endl;
 }
 
-void imprimir(Node *raiz, int nivel) {
+
+// Imprime a arvore de pessoas em forma de lista
+void avl_tree::show(Node *raiz, int nivel) {
     int i;
     if(raiz) {
-        imprimir(raiz->right, nivel + 1);
-        // cout << "\n\n" << endl;
-
-        // for(i = 0; i < nivel; i++)
-        //     cout << "\t";
-
+        show(raiz->right, nivel + 1);
         imprimirPessoa(raiz->pessoa);
-        imprimir(raiz->left, nivel + 1);
+        show(raiz->left, nivel + 1);
     }
 }
 
+
+void avl_tree::clear() {
+    root = clear(root);
+}
+
+
+Node *avl_tree::clear(Node *node) {
+    if(node != nullptr) {
+        node->left = clear(node->left);
+        node->right = clear(node->right);
+        delete node;
+    }
+    return nullptr;
+}
+
+
+avl_tree::~avl_tree() {
+    clear();
+}
+
+
+// -------------------- Arquivo CSV --------------------
+
+// Funcao publica para ler o arquivo CSV
+void avl_tree::lerArquivoCSV(const string& nomeArquivo){
+    root = lerArquivoCSV(root, nomeArquivo);
+}
+
+
+// converte um cpf no formato XXX.XXX.XXX-XX para um valor numerico
+long long int converteCpf(const string& cpf) {
+    string cpfNumerico;
+
+    // Remove os caracteres especiais
+    for (char c : cpf) {
+        if (isdigit(c)) {
+            cpfNumerico += c;
+        }
+    }
+
+    // Converte a string para long long int
+    stringstream ss(cpfNumerico);
+    long long int cpfInt;
+    ss >> cpfInt;
+
+    return cpfInt;
+}
+
+
+// converte uma string no formato MM/DD/AAAA para as variaveis dia, mes e ano
+void converterData(const string& data, int& dia, int& mes, int& ano) {
+    stringstream ss(data);
+    char delimiter;
+    ss >> mes >> delimiter >> dia >> delimiter >> ano;
+}
+
+
+// ler os dados de um arquivo CSV e adiciona os dados na arvore
+Node* avl_tree::lerArquivoCSV(Node *node, const string& nomeArquivo) {
+    ifstream arquivo(nomeArquivo);
+
+    if (arquivo.is_open()) {
+        string linha;
+        getline(arquivo, linha); // Ignora a primeira linha (cabeçalho)
+
+        while (getline(arquivo, linha)) {
+            istringstream linhaStream(linha);
+            string cpf, dt_nasc, cidade, nome, sobrenome;
+            int dia, mes, ano;
+            Pessoa *p;
+
+            getline(linhaStream, cpf, ',');
+            long long int cpflong = converteCpf(cpf);
+
+            getline(linhaStream, nome, ',');
+            getline(linhaStream, sobrenome, ',');
+
+            getline(linhaStream, dt_nasc, ',');
+            converterData(dt_nasc, dia, mes, ano);
+
+            getline(linhaStream, cidade, ',');
+
+            p = new Pessoa(nome, sobrenome, cpflong, cidade, {dia, mes, ano});
+
+            node = addData(node, p);
+        }
+        arquivo.close();
+    } else {
+        cerr << "Não foi possível abrir o arquivo." << endl;
+    }
+
+    return node;
+}
+
+
 int main() {
-    Node* root = nullptr;
-    Node* busca;
+    avl_tree t;
 
     string nomeArquivo = "data.csv";
-    root = lerArquivoCSV(root, nomeArquivo);
+    t.lerArquivoCSV(nomeArquivo);
 
-
-    // listByName(root, "L");
-
-    // listIntervaloDtNascimento(root, {29,11,1953}, {16,11,2001});
-
-    imprimir(root, 1);
-
-    // buscar pelo cpf
-    // cout << "\n\n" << endl;
-    // busca = searchByCPF(root, 44255822921);
-    // imprimirPessoa2(busca->pessoa);
+    t.show();
 
     return 0;
 }
