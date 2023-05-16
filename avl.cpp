@@ -94,76 +94,8 @@ Node* avl_tree::rebalance(Node *node){
 }
 
 
-// add com chave para o cpf
-Node* avl_tree::addCpf(Node *node, Pessoa *pessoa) {
-    if (node == nullptr)
-        return new Node(pessoa);
-    else{ // insercao a direita ou a esquerda
-        if(pessoa->cpf == node->pessoa->cpf)
-            return node;
-        if(pessoa->cpf > node->pessoa->cpf)
-            node->right = addCpf(node->right, pessoa);
-        else
-            node->left = addCpf(node->left, pessoa);
-    }
-
-    // recalcula a altura de todos os nodes entre a raiz e o novo no inserido
-    node->height = max(height(node->left), height(node->right)) + 1;
-
-    // verificar a necessidade de rebalancear a arvore
-    node = rebalance(node);
-
-    return node;
-}
-
-// adicionar uma pessoa a arvore usando o nome como chave
-// TODO: Considerar a possibilidade de nomes duplicados
-// TODO: Considerar o sobrenome na busca (Nome Completo)
-Node* avl_tree::addNome(Node *node, Pessoa *pessoa) {
-    if (node == nullptr)
-        return new Node(pessoa);
-    else{ // insercao a direita ou a esquerda
-        if(pessoa->nome == node->pessoa->nome)
-            return node;
-        if(pessoa->nome > node->pessoa->nome)
-            node->right = addNome(node->right, pessoa);
-        else
-            node->left = addNome(node->left, pessoa);
-    }
-
-    // recalcula a altura de todos os nodes entre a raiz e o novo no inserido
-    node->height = max(height(node->left), height(node->right)) + 1;
-
-    // verificar a necessidade de rebalancear a arvore
-    node = rebalance(node);
-
-    return node;
-}
-
-
-// Funcao auxiliar que recebe duas dadas e retorna true se a primeira for maior que a segunda
-bool dataCompare(const Data& data1, const Data& data2) {
-    if(data1.ano > data2.ano)
-        return true;
-    else if(data1.ano < data2.ano)
-        return false;
-    else {
-        if(data1.mes > data2.mes)
-            return true;
-        else if(data1.mes < data2.mes)
-            return false;
-        else {
-            if(data1.dia > data2.dia)
-                return true;
-            else
-                return false;
-        }
-    }
-}
-
-
 // Compara duas datas e retorna 1 se a primeira for maior que a segunda, -1 se a primeira for menor que a segunda e 0 se forem iguais
-int dataCompare2(const Data& data1, const Data& data2) {
+int dataCompare(const Data& data1, const Data& data2) {
     if(data1.ano > data2.ano) 
         return 1; 
     else if(data1.ano < data2.ano) 
@@ -185,22 +117,42 @@ int dataCompare2(const Data& data1, const Data& data2) {
     
 }
 
-void avl_tree::add(Pessoa *pessoa) {
-    root = addData(root, pessoa);
-}
 
-// adicionar uma pessoa a arvore usando a data de nascimento como chave
-Node* avl_tree::addData(Node *node, Pessoa *pessoa) {
+// Functor para comparar CPFs
+struct CompareCpf{
+    bool operator()(const Pessoa* a, const Pessoa* b) const {
+        return a->cpf > b->cpf;
+    }
+};
+
+
+// Functor para comparar Nomes
+struct CompareNome{
+    bool operator()(const Pessoa* a, const Pessoa* b) const {
+        return a->nome > b->nome;
+    }
+};
+
+
+// Functor para comparar Datas
+struct CompareData{
+    bool operator()(const Pessoa* a, const Pessoa* b) const {
+        return dataCompare(a->dt_nascimento, b->dt_nascimento) == 1;
+    }
+};
+
+
+// Funcao generica add
+template <typename T>
+Node* avl_tree::add(Node *node, Pessoa *pessoa, T comparator) {
     if (node == nullptr)
         return new Node(pessoa);
-
-    // Compara se a primeira data eh maior que a segunda
-    if(dataCompare(pessoa->dt_nascimento, node->pessoa->dt_nascimento))
-        node->right = addData(node->right, pessoa);
-    else if(dataCompare(node->pessoa->dt_nascimento, pessoa->dt_nascimento))
-        node->left = addData(node->left, pessoa);
-    else // A pessoa tem a mesma data de nascimento, pode ser inserida #TODO: Comparar CPF
-        node->left = addData(node->left, pessoa);
+    else {
+        if (comparator(pessoa, node->pessoa))
+            node->right = add(node->right, pessoa, comparator);
+        else
+            node->left = add(node->left, pessoa, comparator);
+    }
 
     // recalcula a altura de todos os nodes entre a raiz e o novo no inserido
     node->height = max(height(node->left), height(node->right)) + 1;
@@ -209,6 +161,20 @@ Node* avl_tree::addData(Node *node, Pessoa *pessoa) {
     node = rebalance(node);
 
     return node;
+}
+
+
+void avl_tree::addCpf(Pessoa *pessoa) {
+    CompareCpf compCpf;
+    root = add(root, pessoa, compCpf);
+}
+void avl_tree::addNome(Pessoa *pessoa) {
+    CompareNome compNome;
+    root = add(root, pessoa, compNome);
+}
+void avl_tree::addData(Pessoa *pessoa) {
+    CompareData compData;
+    root = add(root, pessoa, compData);
 }
 
 
@@ -262,6 +228,13 @@ Node* avl_tree::remove(Node *node, int cpf) {
 }
 
 
+// funcao publica para buscar uma pessoa na arvore pelo seu cpf
+void avl_tree::searchByCPF(long long int cpf) {
+    Node* node = searchByCPF(root, cpf);
+    showPerson(node);
+}
+
+
 // Consulta uma unica pessoa na arvore pelo seu cpf e exibe os dados na tela
 Node* avl_tree::searchByCPF(Node *node, long long int cpf) {
     if(node == nullptr) // arvore vazia
@@ -276,8 +249,12 @@ Node* avl_tree::searchByCPF(Node *node, long long int cpf) {
             return searchByCPF(node->left, cpf);
         
         return node;
-
     }
+}
+
+// funcao publica para consultar todas as pessoas cujo nome comece com uma string informada pelo usuario
+void avl_tree::listByName(const string& prefixo){
+    listByName(root, prefixo);
 }
 
 
@@ -288,10 +265,8 @@ void avl_tree::listByName(Node *node, const string& prefixo) {
         return;
     
     if(node->pessoa->nome.compare(0, prefixo.length(), prefixo) == 0) {
-        cout << node->pessoa->nome << " " << node->pessoa->sobrenome;
-        cout << " - " << node->pessoa->cpf; 
-        cout << " - " << node->pessoa->cidade;
-        cout << " - " << node->pessoa->dt_nascimento.dia << "/" << node->pessoa->dt_nascimento.mes << "/" << node->pessoa->dt_nascimento.ano << endl;
+        showPerson(node);
+        cout << "\n" << endl;
     }    
 
     listByName(node->left, prefixo);
@@ -299,25 +274,29 @@ void avl_tree::listByName(Node *node, const string& prefixo) {
 }
 
 
+// funcao publica para consultar todas as pessoas cujo data de nascimento esteja em um intervalo estabelecido pelo usuario
+void avl_tree::listDtNasc(const Data& dtInicio, const Data& dtFinal){
+    listDtNasc(root, dtInicio, dtFinal);
+}
+
+
 // Consulta todas as pessoas cuja a data de nascimento esteja em um intervalo estabelecido pelo usuario
 // E exibe todos os dados dessas pessoas na forma de lista
-void avl_tree::listIntervaloDtNascimento(Node *node, const Data& dtInicio, const Data& dtFinal){
+void avl_tree::listDtNasc(Node *node, const Data& dtInicio, const Data& dtFinal){
     if(node == nullptr) // arvore vazia
         return;
     
     // verifica se a data de nascimento do no esta dentro do intervalo
-    if(dataCompare2(dtInicio, node->pessoa->dt_nascimento) <= 0 && dataCompare2(dtFinal, node->pessoa->dt_nascimento) >= 0){
-        cout << node->pessoa->nome << " " << node->pessoa->sobrenome;
-        cout << " - " << node->pessoa->cpf; 
-        cout << " - " << node->pessoa->cidade;
-        cout << " - " << node->pessoa->dt_nascimento.dia << "/" << node->pessoa->dt_nascimento.mes << "/" << node->pessoa->dt_nascimento.ano << endl;
+    if(dataCompare(dtInicio, node->pessoa->dt_nascimento) <= 0 && dataCompare(dtFinal, node->pessoa->dt_nascimento) >= 0){
+        showPerson(node);
+        cout << "\n" << endl;
     }
     
     // verifica se o node esquerdo esta dentro do intervalo
-    listIntervaloDtNascimento(node->left, dtInicio, dtFinal);
+    listDtNasc(node->left, dtInicio, dtFinal);
 
     // verifica se o node direito esta dentro do intervalo
-    listIntervaloDtNascimento(node->right, dtInicio, dtFinal);
+    listDtNasc(node->right, dtInicio, dtFinal);
 }
 
 
@@ -333,6 +312,17 @@ void avl_tree::imprimirPessoa(Pessoa *pessoa) {
     cout << " - " << pessoa->cpf; 
     cout << " - " << pessoa->cidade;
     cout << " - " << pessoa->dt_nascimento.dia << "/" << pessoa->dt_nascimento.mes << "/" << pessoa->dt_nascimento.ano << endl;
+}
+
+void avl_tree::showPerson(Node *node) {
+    if(node == nullptr)
+        cout << "Pessoa nao encontrada" << endl;
+    else{
+        cout << "Nome Completo: " << node->pessoa->nome << " " << node->pessoa->sobrenome << endl;
+        cout << "Numero de CPF: " << node->pessoa->cpf << endl; 
+        cout << "Cidade: " << node->pessoa->cidade << endl;
+        cout << "Data nascimento: " << node->pessoa->dt_nascimento.dia << "/" << node->pessoa->dt_nascimento.mes << "/" << node->pessoa->dt_nascimento.ano << endl;
+    }
 }
 
 
@@ -370,8 +360,9 @@ avl_tree::~avl_tree() {
 // -------------------- Arquivo CSV --------------------
 
 // Funcao publica para ler o arquivo CSV
-void avl_tree::lerArquivoCSV(const string& nomeArquivo){
-    root = lerArquivoCSV(root, nomeArquivo);
+template <typename T>
+void avl_tree::lerArquivoCSV(const string& nomeArquivo, T compare){
+    root = lerArquivoCSV(root, nomeArquivo, compare);
 }
 
 
@@ -402,9 +393,9 @@ void converterData(const string& data, int& dia, int& mes, int& ano) {
     ss >> mes >> delimiter >> dia >> delimiter >> ano;
 }
 
-
 // ler os dados de um arquivo CSV e adiciona os dados na arvore
-Node* avl_tree::lerArquivoCSV(Node *node, const string& nomeArquivo) {
+template <typename T>
+Node* avl_tree::lerArquivoCSV(Node *node, const string& nomeArquivo, T compare) {
     ifstream arquivo(nomeArquivo);
 
     if (arquivo.is_open()) {
@@ -430,7 +421,7 @@ Node* avl_tree::lerArquivoCSV(Node *node, const string& nomeArquivo) {
 
             p = new Pessoa(nome, sobrenome, cpflong, cidade, {dia, mes, ano});
 
-            node = addData(node, p);
+            node = add(node, p, compare);
         }
         arquivo.close();
     } else {
@@ -442,12 +433,43 @@ Node* avl_tree::lerArquivoCSV(Node *node, const string& nomeArquivo) {
 
 
 int main() {
-    avl_tree t;
+    avl_tree cpf, nome, data;
+
+    CompareCpf compCpf;
+    CompareNome compNome;
+    CompareData compData;
+
+    cout << "---------------------------- CPF ----------------------------\n" << endl;
 
     string nomeArquivo = "data.csv";
-    t.lerArquivoCSV(nomeArquivo);
+    cpf.lerArquivoCSV(nomeArquivo, compCpf);
+    cpf.addCpf(new Pessoa("Igor", "Gabriel", 62545698702, "Baturite", {10, 9, 2001}));
+    cpf.show();
 
-    t.show();
+    cout << "\n>> Busca por CPF: \n" << endl;
+    cpf.searchByCPF(71537946897);
+
+    cout << "\n---------------------------- Nome ----------------------------\n" << endl;
+
+    nome.lerArquivoCSV(nomeArquivo, compNome);
+    nome.addNome(new Pessoa("Igor", "Gabriel", 62545698702, "Baturite", {10, 9, 2001}));
+    nome.show();
+
+    cout << "\n>> Busca por Nome: \n" << endl;
+    nome.listByName("Carlos");
+
+    cout << "\n---------------------------- Data ----------------------------\n" << endl;
+
+    data.lerArquivoCSV(nomeArquivo, compData);
+    data.addData(new Pessoa("Igor", "Gabriel", 62545698702, "Baturite", {10, 9, 2001}));
+    data.show();
+
+    cout << "\n>> Busca por Data: \n" << endl;
+    data.listDtNasc({15, 3, 1946}, {2, 7, 1956});
+
+    cpf.clear();
+    nome.clear();
+    data.clear();
 
     return 0;
 }

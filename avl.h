@@ -7,13 +7,23 @@
 class avl_tree {
 public:
     avl_tree() = default;
-    void add(Pessoa *pessoa);
+
+    void addCpf(Pessoa *pessoa);
+    void addNome(Pessoa *pessoa);
+    void addData(Pessoa *pessoa);
+
+    void searchByCPF(long long int cpf);
+    void showPerson(Node *node);
+    void listByName(const string& prefixo);
+    void listDtNasc(const Data& dtInicio, const Data& dtFinal);
+
     void remove(int cpf);
     void show();
     void clear();
     ~avl_tree();
 
-    void lerArquivoCSV(const string& nomeArquivo);
+    template <typename T>
+    void lerArquivoCSV(const string& nomeArquivo, T compare);
 
 private:
     Node *root {nullptr};
@@ -28,22 +38,22 @@ private:
     Node* leftRightRotation(Node *p);
     Node* rebalance(Node *node);
 
-    Node* addCpf(Node *node, Pessoa *pessoa);
-    Node* addNome(Node *node, Pessoa *pessoa);
-    Node* addData(Node *node, Pessoa *pessoa);
+    template <typename T>
+    Node* add(Node *node, Pessoa *pessoa, T comparator);
 
     Node* remove(Node *node, int cpf);
 
     Node* searchByCPF(Node *node, long long int cpf);
     void listByName(Node *node, const string& prefixo);
-    void listIntervaloDtNascimento(Node *node, const Data& dtInicio, const Data& dtFinal);
+    void listDtNasc(Node *node, const Data& dtInicio, const Data& dtFinal);
 
     void imprimirPessoa(Pessoa *pessoa);
     void show(Node *raiz, int nivel);
 
     Node* clear(Node *node);
 
-    Node* lerArquivoCSV(Node *node, const string& nomeArquivo);
+    template <typename T>
+    Node* lerArquivoCSV(Node *node, const string& nomeArquivo, T compare);
 };
 
 #endif
