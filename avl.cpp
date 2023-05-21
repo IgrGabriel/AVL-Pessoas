@@ -5,6 +5,8 @@
 #include <string>
 #include <sstream>
 
+#include <iomanip> // Para std::setfill() e std::setw()
+
 using namespace std;
 
 // retorna a altura do node.
@@ -252,6 +254,7 @@ Node* avl_tree::searchByCPF(Node *node, long long int cpf) {
     }
 }
 
+
 // funcao publica para consultar todas as pessoas cujo nome comece com uma string informada pelo usuario
 void avl_tree::listByName(const string& prefixo){
     listByName(root, prefixo);
@@ -306,22 +309,52 @@ void avl_tree::show(){
 }
 
 
+void imprimirCPF(long long int cpf) {
+    string cpfStr = to_string(cpf);
+
+    // if (cpfStr.length() != 11) {
+    //     std::cout << "CPF inválido!" << std::endl;
+    //     return;
+    // }
+
+    cout << cpfStr.substr(0, 3) << ".";
+    cout << cpfStr.substr(3, 3) << ".";
+    cout << cpfStr.substr(6, 3) << "-";
+    cout << cpfStr.substr(9, 2);
+}
+
+
 // Imprime os dados de uma pessoa na tela
 void avl_tree::imprimirPessoa(Pessoa *pessoa) {
     cout << pessoa->nome << " " << pessoa->sobrenome;
-    cout << " - " << pessoa->cpf; 
+
+    // cout << " - " << pessoa->cpf; 
+    cout << " - ";
+    imprimirCPF(pessoa->cpf);
+    
     cout << " - " << pessoa->cidade;
-    cout << " - " << pessoa->dt_nascimento.dia << "/" << pessoa->dt_nascimento.mes << "/" << pessoa->dt_nascimento.ano << endl;
+    cout << " - " << setfill('0') << setw(2) << pessoa->dt_nascimento.dia << "/" 
+                  << setfill('0') << setw(2) << pessoa->dt_nascimento.mes << "/" 
+                  << setfill('0') << setw(2) << pessoa->dt_nascimento.ano << endl;
 }
+
 
 void avl_tree::showPerson(Node *node) {
     if(node == nullptr)
         cout << "Pessoa nao encontrada" << endl;
     else{
         cout << "Nome Completo: " << node->pessoa->nome << " " << node->pessoa->sobrenome << endl;
-        cout << "Numero de CPF: " << node->pessoa->cpf << endl; 
+
+        cout << "Numero de CPF: ";
+        imprimirCPF(node->pessoa->cpf); 
+        cout << "" << endl; 
+
         cout << "Cidade: " << node->pessoa->cidade << endl;
-        cout << "Data nascimento: " << node->pessoa->dt_nascimento.dia << "/" << node->pessoa->dt_nascimento.mes << "/" << node->pessoa->dt_nascimento.ano << endl;
+
+        cout << "Data nascimento: " 
+                    << setfill('0') << setw(2) << node->pessoa->dt_nascimento.dia << "/" 
+                    << setfill('0') << setw(2) << node->pessoa->dt_nascimento.mes << "/" 
+                    << setfill('0') << setw(2) << node->pessoa->dt_nascimento.ano << endl;
     }
 }
 
@@ -392,6 +425,7 @@ void converterData(const string& data, int& dia, int& mes, int& ano) {
     char delimiter;
     ss >> mes >> delimiter >> dia >> delimiter >> ano;
 }
+
 
 // ler os dados de um arquivo CSV e adiciona os dados na arvore
 template <typename T>
