@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include <iomanip> // Para std::setfill() e std::setw()
+#include <cctype> // Para std::tolower()
 
 using namespace std;
 
@@ -128,6 +129,8 @@ struct CompareCpf{
 };
 
 
+// #TODO: Considerar o nome completo(nome + sobrenome)
+// #TODO: Tratar o quando houver a add de nomes iguais
 // Functor para comparar Nomes
 struct CompareNome{
     bool operator()(const Pessoa* a, const Pessoa* b) const {
@@ -255,6 +258,18 @@ Node* avl_tree::searchByCPF(Node *node, long long int cpf) {
 }
 
 
+// Funcao auxiliar para converter uma string em minuslas
+// Usada na funcao listByName
+string stringToLower(const string& str){
+    string lowerStr = str;
+
+    for(char& c : lowerStr)
+        c = tolower(c);
+    
+    return lowerStr;
+}
+
+
 // funcao publica para consultar todas as pessoas cujo nome comece com uma string informada pelo usuario
 void avl_tree::listByName(const string& prefixo){
     listByName(root, prefixo);
@@ -266,8 +281,11 @@ void avl_tree::listByName(const string& prefixo){
 void avl_tree::listByName(Node *node, const string& prefixo) {
     if(node == nullptr) // arvore vazia
         return;
+
+    string completeName = stringToLower(node->pessoa->nome + " " + node->pessoa->sobrenome);
+    string lowerPrefix = stringToLower(prefixo);
     
-    if(node->pessoa->nome.compare(0, prefixo.length(), prefixo) == 0) {
+    if(completeName.compare(0, prefixo.length(), lowerPrefix) == 0) {
         showPerson(node);
         cout << "\n" << endl;
     }    
@@ -309,6 +327,7 @@ void avl_tree::show(){
 }
 
 
+// #TODO: Tratar quando CPF tiver menos que 11 digitos (add 0's na frente do cpf)
 void imprimirCPF(long long int cpf) {
     string cpfStr = to_string(cpf);
 
@@ -490,7 +509,7 @@ int main() {
     nome.show();
 
     cout << "\n>> Busca por Nome: \n" << endl;
-    nome.listByName("Carlos");
+    nome.listByName("carlos CORREIA");
 
     cout << "\n---------------------------- Data ----------------------------\n" << endl;
 
