@@ -124,7 +124,7 @@ int dataCompare(const Data& data1, const Data& data2) {
 // Functor para comparar CPFs
 struct CompareCpf{
     bool operator()(const Pessoa* a, const Pessoa* b) const {
-        return a->cpf > b->cpf;
+        return a->getCpf() > b->getCpf();
     }
 };
 
@@ -134,7 +134,7 @@ struct CompareCpf{
 // Functor para comparar Nomes
 struct CompareNome{
     bool operator()(const Pessoa* a, const Pessoa* b) const {
-        return a->nome > b->nome;
+        return a->getNome() > b->getNome();
     }
 };
 
@@ -142,7 +142,7 @@ struct CompareNome{
 // Functor para comparar Datas
 struct CompareData{
     bool operator()(const Pessoa* a, const Pessoa* b) const {
-        return dataCompare(a->dt_nascimento, b->dt_nascimento) == 1;
+        return dataCompare(a->getDtNascimento(), b->getDtNascimento()) == 1;
     }
 };
 
@@ -184,53 +184,53 @@ void avl_tree::addData(Pessoa *pessoa) {
 
 
 // Remover uma pessoa da arvore usando o cpf com chave
-Node* avl_tree::remove(Node *node, int cpf) {
-    if(node == nullptr) // Node nao encontrado
-        return nullptr;
-    else { // procura o node a remover
-        if(node->pessoa->cpf == cpf){
-            // remover node folhas (node sem filhos)
-            if(node->right == nullptr && node->left == nullptr){
-                delete node;
-                return nullptr;
-            } else { // remove node com filhos
-                // remover node com 2 filhos
-                if(node->right != nullptr && node->left != nullptr){
-                    Node *aux = node->left;
-                    while(aux->right != nullptr)
-                        aux = aux->right;
-                    node->pessoa->cpf = aux->pessoa->cpf;
-                    aux->pessoa->cpf = cpf;
-                    node->left = remove(node->left, cpf);
-                    return node;
-                } 
-                else {
-                    // remover nodes que possuem apenas 1 filho
-                    Node *aux;
-                    if(node->right != nullptr)
-                        aux = node->right;
-                    else
-                        aux = node->left;
-                    delete node;
-                    return aux;
-                }
-            }
-        } else {
-            if(cpf > node->pessoa->cpf) 
-                node->right = remove(node->right, cpf);
-            else
-                node->left = remove(node->left, cpf);
-        }
+// Node* avl_tree::remove(Node *node, int cpf) {
+//     if(node == nullptr) // Node nao encontrado
+//         return nullptr;
+//     else { // procura o node a remover
+//         if(node->pessoa->cpf == cpf){
+//             // remover node folhas (node sem filhos)
+//             if(node->right == nullptr && node->left == nullptr){
+//                 delete node;
+//                 return nullptr;
+//             } else { // remove node com filhos
+//                 // remover node com 2 filhos
+//                 if(node->right != nullptr && node->left != nullptr){
+//                     Node *aux = node->left;
+//                     while(aux->right != nullptr)
+//                         aux = aux->right;
+//                     node->pessoa->cpf = aux->pessoa->cpf;
+//                     aux->pessoa->cpf = cpf;
+//                     node->left = remove(node->left, cpf);
+//                     return node;
+//                 } 
+//                 else {
+//                     // remover nodes que possuem apenas 1 filho
+//                     Node *aux;
+//                     if(node->right != nullptr)
+//                         aux = node->right;
+//                     else
+//                         aux = node->left;
+//                     delete node;
+//                     return aux;
+//                 }
+//             }
+//         } else {
+//             if(cpf > node->pessoa->cpf) 
+//                 node->right = remove(node->right, cpf);
+//             else
+//                 node->left = remove(node->left, cpf);
+//         }
         
-        // recalcula a altur de todos os nodes entre a raiz e o novo node inserido
-        node->height = max(height(node->left), height(node->right)) + 1;
+//         // recalcula a altur de todos os nodes entre a raiz e o novo node inserido
+//         node->height = max(height(node->left), height(node->right)) + 1;
 
-        // verifica a necessidade de rebalancear a arvore
-        node = rebalance(node);
+//         // verifica a necessidade de rebalancear a arvore
+//         node = rebalance(node);
 
-        return node;
-    }
-}
+//         return node;
+//     }
+// }
 
 
 // funcao publica para buscar uma pessoa na arvore pelo seu cpf
@@ -246,9 +246,9 @@ Node* avl_tree::searchByCPF(Node *node, long long int cpf) {
         return nullptr;
     else {  // procurar o cpf na arvore
 
-        if(cpf == node->pessoa->cpf) // CPF encontrado
+        if(cpf == node->pessoa->getCpf()) // CPF encontrado
             return node;
-        else if(cpf >  node->pessoa->cpf)
+        else if(cpf >  node->pessoa->getCpf())
             return searchByCPF(node->right, cpf);
         else
             return searchByCPF(node->left, cpf);
@@ -282,7 +282,7 @@ void avl_tree::listByName(Node *node, const string& prefixo) {
     if(node == nullptr) // arvore vazia
         return;
 
-    string completeName = stringToLower(node->pessoa->nome + " " + node->pessoa->sobrenome);
+    string completeName = stringToLower(node->pessoa->getNome() + " " + node->pessoa->getSobrenome());
     string lowerPrefix = stringToLower(prefixo);
     
     if(completeName.compare(0, prefixo.length(), lowerPrefix) == 0) {
@@ -308,7 +308,7 @@ void avl_tree::listDtNasc(Node *node, const Data& dtInicio, const Data& dtFinal)
         return;
     
     // verifica se a data de nascimento do no esta dentro do intervalo
-    if(dataCompare(dtInicio, node->pessoa->dt_nascimento) <= 0 && dataCompare(dtFinal, node->pessoa->dt_nascimento) >= 0){
+    if(dataCompare(dtInicio, node->pessoa->getDtNascimento()) <= 0 && dataCompare(dtFinal, node->pessoa->getDtNascimento()) >= 0){
         showPerson(node);
         cout << "\n" << endl;
     }
@@ -345,16 +345,15 @@ void imprimirCPF(long long int cpf) {
 
 // Imprime os dados de uma pessoa na tela
 void avl_tree::imprimirPessoa(Pessoa *pessoa) {
-    cout << pessoa->nome << " " << pessoa->sobrenome;
+    cout << pessoa->getNome() << " " << pessoa->getSobrenome();
 
-    // cout << " - " << pessoa->cpf; 
     cout << " - ";
-    imprimirCPF(pessoa->cpf);
+    imprimirCPF(pessoa->getCpf());
     
-    cout << " - " << pessoa->cidade;
-    cout << " - " << setfill('0') << setw(2) << pessoa->dt_nascimento.dia << "/" 
-                  << setfill('0') << setw(2) << pessoa->dt_nascimento.mes << "/" 
-                  << setfill('0') << setw(2) << pessoa->dt_nascimento.ano << endl;
+    cout << " - " << pessoa->getCidade();
+    cout << " - " << setfill('0') << setw(2) << pessoa->getDiaNascimento() << "/" 
+                << setfill('0') << setw(2) << pessoa->getMesNascimento() << "/" 
+                << setfill('0') << setw(2) << pessoa->getAnoNascimento() << endl;
 }
 
 
@@ -362,18 +361,18 @@ void avl_tree::showPerson(Node *node) {
     if(node == nullptr)
         cout << "Pessoa nao encontrada" << endl;
     else{
-        cout << "Nome Completo: " << node->pessoa->nome << " " << node->pessoa->sobrenome << endl;
+        cout << "Nome Completo: " << node->pessoa->getNome() << " " << node->pessoa->getSobrenome() << endl;
 
         cout << "Numero de CPF: ";
-        imprimirCPF(node->pessoa->cpf); 
+        imprimirCPF(node->pessoa->getCpf()); 
         cout << "" << endl; 
 
-        cout << "Cidade: " << node->pessoa->cidade << endl;
+        cout << "Cidade: " << node->pessoa->getCidade() << endl;
 
         cout << "Data nascimento: " 
-                    << setfill('0') << setw(2) << node->pessoa->dt_nascimento.dia << "/" 
-                    << setfill('0') << setw(2) << node->pessoa->dt_nascimento.mes << "/" 
-                    << setfill('0') << setw(2) << node->pessoa->dt_nascimento.ano << endl;
+                    << setfill('0') << setw(2) << node->pessoa->getDiaNascimento() << "/" 
+                    << setfill('0') << setw(2) << node->pessoa->getMesNascimento() << "/" 
+                    << setfill('0') << setw(2) << node->pessoa->getAnoNascimento() << endl;
     }
 }
 
@@ -459,7 +458,7 @@ Node* avl_tree::lerArquivoCSV(Node *node, const string& nomeArquivo, T compare) 
             istringstream linhaStream(linha);
             string cpf, dt_nasc, cidade, nome, sobrenome;
             int dia, mes, ano;
-            Pessoa *p;
+            Pessoa* p;
 
             getline(linhaStream, cpf, ',');
             long long int cpflong = converteCpf(cpf);
