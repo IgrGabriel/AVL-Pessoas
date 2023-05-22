@@ -4,13 +4,20 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <vector>
 #include <string>
 
 #include "node.h"
 #include "avl.h"
+#include "pessoa.h"
 
 using namespace std;
+
+// Funcao publica para ler o arquivo CSV
+template <typename T>
+void avl_tree::lerArquivoCSV(const string& nomeArquivo, T compare){
+    root = lerArquivoCSV(root, nomeArquivo, compare);
+}
+
 
 // converte um cpf no formato XXX.XXX.XXX-XX para um valor numerico
 long long int converteCpf(const string& cpf) {
@@ -31,13 +38,18 @@ long long int converteCpf(const string& cpf) {
     return cpfInt;
 }
 
+
+// converte uma string no formato MM/DD/AAAA para as variaveis dia, mes e ano
 void converterData(const string& data, int& dia, int& mes, int& ano) {
     stringstream ss(data);
     char delimiter;
     ss >> mes >> delimiter >> dia >> delimiter >> ano;
 }
 
-Node* lerArquivoCSV(Node *node, const string& nomeArquivo) {
+
+// ler os dados de um arquivo CSV e adiciona os dados na arvore
+template <typename T>
+Node* avl_tree::lerArquivoCSV(Node *node, const string& nomeArquivo, T compare) {
     ifstream arquivo(nomeArquivo);
 
     if (arquivo.is_open()) {
@@ -48,7 +60,7 @@ Node* lerArquivoCSV(Node *node, const string& nomeArquivo) {
             istringstream linhaStream(linha);
             string cpf, dt_nasc, cidade, nome, sobrenome;
             int dia, mes, ano;
-            Pessoa *p;
+            Pessoa* p;
 
             getline(linhaStream, cpf, ',');
             long long int cpflong = converteCpf(cpf);
@@ -63,7 +75,7 @@ Node* lerArquivoCSV(Node *node, const string& nomeArquivo) {
 
             p = new Pessoa(nome, sobrenome, cpflong, cidade, {dia, mes, ano});
 
-            node = addData(node, p);
+            node = add(node, p, compare);
         }
         arquivo.close();
     } else {

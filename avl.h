@@ -13,11 +13,10 @@ public:
     void addData(Pessoa *pessoa);
 
     void searchByCPF(long long int cpf);
-    void showPerson(Node *node);
     void listByName(const string& prefixo);
     void listDtNasc(const Data& dtInicio, const Data& dtFinal);
 
-    void remove(int cpf);
+    // void remove(int cpf);
     void show();
     void clear();
     ~avl_tree();
@@ -47,8 +46,9 @@ private:
     void listByName(Node *node, const string& prefixo);
     void listDtNasc(Node *node, const Data& dtInicio, const Data& dtFinal);
 
-    void imprimirPessoa(Pessoa *pessoa);
     void show(Node *raiz, int nivel);
+    void showPessoa(Pessoa *pessoa);
+    void listPessoas(Node *node);
 
     Node* clear(Node *node);
 

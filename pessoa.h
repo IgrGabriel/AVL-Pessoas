@@ -21,6 +21,7 @@ public:
     Pessoa(const std::string& _nome, const std::string& _sobrenome, long long int _cpf, const std::string& _cidade, const Data& _dt_nascimento)
         : nome(_nome), sobrenome(_sobrenome), cpf(_cpf), cidade(_cidade), dt_nascimento(_dt_nascimento) {}
 
+
     // Getters
     std::string getNome() const {
         return nome;

@@ -1,9 +1,7 @@
 #include <iostream>
 #include "node.h"
 #include "avl.h"
-#include <fstream>
-#include <string>
-#include <sstream>
+#include "arq.h"
 
 #include <iomanip> // Para std::setfill() e std::setw()
 #include <cctype> // Para std::tolower()
@@ -96,6 +94,23 @@ Node* avl_tree::rebalance(Node *node){
     return node;
 }
 
+// Functor para comparar CPFs
+struct CompareCpf{
+    bool operator()(const Pessoa* a, const Pessoa* b) const {
+        return a->getCpf() > b->getCpf();
+    }
+};
+
+
+// #TODO: Considerar o nome completo(nome + sobrenome)
+// #TODO: Tratar o quando houver a add de nomes iguais
+// Functor para comparar Nomes
+struct CompareNome{
+    bool operator()(const Pessoa* a, const Pessoa* b) const {
+        return a->getNome() > b->getNome();
+    }
+};
+
 
 // Compara duas datas e retorna 1 se a primeira for maior que a segunda, -1 se a primeira for menor que a segunda e 0 se forem iguais
 int dataCompare(const Data& data1, const Data& data2) {
@@ -119,24 +134,6 @@ int dataCompare(const Data& data1, const Data& data2) {
     }
     
 }
-
-
-// Functor para comparar CPFs
-struct CompareCpf{
-    bool operator()(const Pessoa* a, const Pessoa* b) const {
-        return a->getCpf() > b->getCpf();
-    }
-};
-
-
-// #TODO: Considerar o nome completo(nome + sobrenome)
-// #TODO: Tratar o quando houver a add de nomes iguais
-// Functor para comparar Nomes
-struct CompareNome{
-    bool operator()(const Pessoa* a, const Pessoa* b) const {
-        return a->getNome() > b->getNome();
-    }
-};
 
 
 // Functor para comparar Datas
@@ -235,8 +232,7 @@ void avl_tree::addData(Pessoa *pessoa) {
 
 // funcao publica para buscar uma pessoa na arvore pelo seu cpf
 void avl_tree::searchByCPF(long long int cpf) {
-    Node* node = searchByCPF(root, cpf);
-    showPerson(node);
+    listPessoas(searchByCPF(root, cpf));
 }
 
 
@@ -286,7 +282,7 @@ void avl_tree::listByName(Node *node, const string& prefixo) {
     string lowerPrefix = stringToLower(prefixo);
     
     if(completeName.compare(0, prefixo.length(), lowerPrefix) == 0) {
-        showPerson(node);
+        listPessoas(node);
         cout << "\n" << endl;
     }    
 
@@ -309,7 +305,7 @@ void avl_tree::listDtNasc(Node *node, const Data& dtInicio, const Data& dtFinal)
     
     // verifica se a data de nascimento do no esta dentro do intervalo
     if(dataCompare(dtInicio, node->pessoa->getDtNascimento()) <= 0 && dataCompare(dtFinal, node->pessoa->getDtNascimento()) >= 0){
-        showPerson(node);
+        listPessoas(node);
         cout << "\n" << endl;
     }
     
@@ -320,21 +316,9 @@ void avl_tree::listDtNasc(Node *node, const Data& dtInicio, const Data& dtFinal)
     listDtNasc(node->right, dtInicio, dtFinal);
 }
 
-
-// Funcao publica para imprimir a arvore
-void avl_tree::show(){
-    show(root, 1);
-}
-
-
 // #TODO: Tratar quando CPF tiver menos que 11 digitos (add 0's na frente do cpf)
-void imprimirCPF(long long int cpf) {
+void formatCPF(long long int cpf) {
     string cpfStr = to_string(cpf);
-
-    // if (cpfStr.length() != 11) {
-    //     std::cout << "CPF inválido!" << std::endl;
-    //     return;
-    // }
 
     cout << cpfStr.substr(0, 3) << ".";
     cout << cpfStr.substr(3, 3) << ".";
@@ -344,11 +328,11 @@ void imprimirCPF(long long int cpf) {
 
 
 // Imprime os dados de uma pessoa na tela
-void avl_tree::imprimirPessoa(Pessoa *pessoa) {
+void avl_tree::showPessoa(Pessoa *pessoa) {
     cout << pessoa->getNome() << " " << pessoa->getSobrenome();
 
     cout << " - ";
-    imprimirCPF(pessoa->getCpf());
+    formatCPF(pessoa->getCpf());
     
     cout << " - " << pessoa->getCidade();
     cout << " - " << setfill('0') << setw(2) << pessoa->getDiaNascimento() << "/" 
@@ -357,14 +341,14 @@ void avl_tree::imprimirPessoa(Pessoa *pessoa) {
 }
 
 
-void avl_tree::showPerson(Node *node) {
+void avl_tree::listPessoas(Node *node) {
     if(node == nullptr)
         cout << "Pessoa nao encontrada" << endl;
     else{
         cout << "Nome Completo: " << node->pessoa->getNome() << " " << node->pessoa->getSobrenome() << endl;
 
         cout << "Numero de CPF: ";
-        imprimirCPF(node->pessoa->getCpf()); 
+        formatCPF(node->pessoa->getCpf()); 
         cout << "" << endl; 
 
         cout << "Cidade: " << node->pessoa->getCidade() << endl;
@@ -377,12 +361,17 @@ void avl_tree::showPerson(Node *node) {
 }
 
 
+// Funcao publica para imprimir a arvore
+void avl_tree::show(){
+    show(root, 1);
+}
+
 // Imprime a arvore de pessoas em forma de lista
 void avl_tree::show(Node *raiz, int nivel) {
     int i;
     if(raiz) {
         show(raiz->right, nivel + 1);
-        imprimirPessoa(raiz->pessoa);
+        showPessoa(raiz->pessoa);
         show(raiz->left, nivel + 1);
     }
 }
@@ -406,83 +395,6 @@ Node *avl_tree::clear(Node *node) {
 avl_tree::~avl_tree() {
     clear();
 }
-
-
-// -------------------- Arquivo CSV --------------------
-
-// Funcao publica para ler o arquivo CSV
-template <typename T>
-void avl_tree::lerArquivoCSV(const string& nomeArquivo, T compare){
-    root = lerArquivoCSV(root, nomeArquivo, compare);
-}
-
-
-// converte um cpf no formato XXX.XXX.XXX-XX para um valor numerico
-long long int converteCpf(const string& cpf) {
-    string cpfNumerico;
-
-    // Remove os caracteres especiais
-    for (char c : cpf) {
-        if (isdigit(c)) {
-            cpfNumerico += c;
-        }
-    }
-
-    // Converte a string para long long int
-    stringstream ss(cpfNumerico);
-    long long int cpfInt;
-    ss >> cpfInt;
-
-    return cpfInt;
-}
-
-
-// converte uma string no formato MM/DD/AAAA para as variaveis dia, mes e ano
-void converterData(const string& data, int& dia, int& mes, int& ano) {
-    stringstream ss(data);
-    char delimiter;
-    ss >> mes >> delimiter >> dia >> delimiter >> ano;
-}
-
-
-// ler os dados de um arquivo CSV e adiciona os dados na arvore
-template <typename T>
-Node* avl_tree::lerArquivoCSV(Node *node, const string& nomeArquivo, T compare) {
-    ifstream arquivo(nomeArquivo);
-
-    if (arquivo.is_open()) {
-        string linha;
-        getline(arquivo, linha); // Ignora a primeira linha (cabeçalho)
-
-        while (getline(arquivo, linha)) {
-            istringstream linhaStream(linha);
-            string cpf, dt_nasc, cidade, nome, sobrenome;
-            int dia, mes, ano;
-            Pessoa* p;
-
-            getline(linhaStream, cpf, ',');
-            long long int cpflong = converteCpf(cpf);
-
-            getline(linhaStream, nome, ',');
-            getline(linhaStream, sobrenome, ',');
-
-            getline(linhaStream, dt_nasc, ',');
-            converterData(dt_nasc, dia, mes, ano);
-
-            getline(linhaStream, cidade, ',');
-
-            p = new Pessoa(nome, sobrenome, cpflong, cidade, {dia, mes, ano});
-
-            node = add(node, p, compare);
-        }
-        arquivo.close();
-    } else {
-        cerr << "Não foi possível abrir o arquivo." << endl;
-    }
-
-    return node;
-}
-
 
 int main() {
     avl_tree cpf, nome, data;
@@ -508,7 +420,7 @@ int main() {
     nome.show();
 
     cout << "\n>> Busca por Nome: \n" << endl;
-    nome.listByName("carlos CORREIA");
+    nome.listByName("i");
 
     cout << "\n---------------------------- Data ----------------------------\n" << endl;
 
