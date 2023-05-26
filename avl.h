@@ -16,7 +16,6 @@ public:
     void listByName(const string& prefixo);
     void listDtNasc(const Data& dtInicio, const Data& dtFinal);
 
-    // void remove(int cpf);
     void show();
     void clear();
     ~avl_tree();
@@ -39,8 +38,6 @@ private:
 
     template <typename T>
     Node* add(Node *node, Pessoa *pessoa, T comparator);
-
-    Node* remove(Node *node, int cpf);
 
     Node* searchByCPF(Node *node, long long int cpf);
     void listByName(Node *node, const string& prefixo);
