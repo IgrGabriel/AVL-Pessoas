@@ -30,4 +30,11 @@ struct CompareData{
     }
 };
 
+// Functor para comparar Datas
+struct CompareCidade{
+    bool operator()(const Pessoa* a, const Pessoa* b) const {
+        return  a.getCidade() > b.getCidade();
+    }
+};
+
 #endif
