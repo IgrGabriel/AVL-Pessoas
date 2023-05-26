@@ -11,10 +11,12 @@ public:
     void addCpf(Pessoa *pessoa);
     void addNome(Pessoa *pessoa);
     void addData(Pessoa *pessoa);
+    void addCidade(Pessoa *pessoa);
 
     void searchByCPF(long long int cpf);
     void listByName(const string& prefixo);
     void listDtNasc(const Data& dtInicio, const Data& dtFinal);
+    void listByCity(const string& prefixo);
 
     void show();
     void clear();
@@ -42,6 +44,7 @@ private:
     Node* searchByCPF(Node *node, long long int cpf);
     void listByName(Node *node, const string& prefixo);
     void listDtNasc(Node *node, const Data& dtInicio, const Data& dtFinal);
+    void listByCity(Node *node, const string& prefixo);
 
     void show(Node *raiz, int nivel);
     void showPessoa(Pessoa *pessoa);

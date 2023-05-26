@@ -99,6 +99,7 @@ Node* avl_tree::rebalance(Node *node){
     return node;
 }
 
+
 // Funcao generica add
 template <typename T>
 Node* avl_tree::add(Node *node, Pessoa *pessoa, T comparator) {
@@ -133,6 +134,11 @@ void avl_tree::addData(Pessoa *pessoa) {
     CompareData compData;
     root = add(root, pessoa, compData);
 }
+void avl_tree::addCidade(Pessoa *pessoa) {
+    CompareCidade compCidade;
+    root = add(root, pessoa, compCidade);
+}
+
 
 // funcao publica para buscar uma pessoa na arvore pelo seu cpf
 void avl_tree::searchByCPF(long long int cpf) {
@@ -164,7 +170,7 @@ void avl_tree::listByName(const string& prefixo){
 }
 
 
-// Consulta todas as pessoa cujo nome comece com uma string informada pelo uduario
+// Consulta todas as pessoa cujo nome comece com uma string informada pelo usuario
 // E exibe todos os dados dessas pessoas na forma de lista
 void avl_tree::listByName(Node *node, const string& prefixo) {
     if(node == nullptr) // arvore vazia
@@ -209,6 +215,31 @@ void avl_tree::listDtNasc(Node *node, const Data& dtInicio, const Data& dtFinal)
 }
 
 
+// funcao publica para consultar todas as pessoas cujo a cidade comece com uma string informada pelo usuario
+void avl_tree::listByCity(const string& prefixo){
+    listByCity(root, prefixo);
+}
+
+
+// Consulta todas as pessoa cujo a cidade comece com uma string informada pelo usuario
+// E exibe todos os dados dessas pessoas na forma de list
+void avl_tree::listByCity(Node *node, const string& prefixo) {
+    if(node == nullptr) // arvore vazia
+        return;
+
+    string city = stringToLower(node->pessoa->getCidade());
+    string lowerPrefix = stringToLower(prefixo);
+    
+    if(city.compare(0, prefixo.length(), lowerPrefix) == 0) {
+        listPessoas(node);
+        cout << "\n" << endl;
+    }    
+
+    listByCity(node->left, prefixo);
+    listByCity(node->right, prefixo);
+}
+
+
 // Imprime os dados de uma pessoa na tela
 void avl_tree::showPessoa(Pessoa *pessoa) {
     cout << pessoa->getNome() << " " << pessoa->getSobrenome();
@@ -248,6 +279,7 @@ void avl_tree::show(){
     show(root, 1);
 }
 
+
 // Imprime a arvore de pessoas em forma de lista
 void avl_tree::show(Node *raiz, int nivel) {
     int i;
@@ -280,19 +312,21 @@ avl_tree::~avl_tree() {
 
 
 int main() {
-    avl_tree cpf, nome, data;
+    avl_tree cpf, nome, data, cidade;
 
     CompareCpf compCpf;
     CompareNome compNome;
     CompareData compData;
+    CompareCidade compCidade;
 
     string nomeArquivo = "data.csv";
     
     cpf.lerArquivoCSV(nomeArquivo, compCpf);
     data.lerArquivoCSV(nomeArquivo, compData);
     nome.lerArquivoCSV(nomeArquivo, compNome);
+    cidade.lerArquivoCSV(nomeArquivo, compCidade);
     
-    string prefixo, dataInicial, dataFinal, name, sobrenome, cidade, dataNascimento;
+    string prefixo, dataInicial, dataFinal, name, surname, city, dataNascimento;
     int dia, mes, ano, dia1, mes1, ano1, dia2, mes2, ano2;
     long long int num_cpf;
 
@@ -302,10 +336,12 @@ int main() {
         cout << "1. Consultar uma pessoa pelo CPF" << endl;
         cout << "2. Consultar pessoas pelo prefixo do nome" << endl;
         cout << "3. Consultar pessoas pelo intervalo de data de nascimento" << endl;
-        cout << "4. Mostrar lista de pessoas ordenadas pelo CPF" << endl;
-        cout << "5. Mostrar lista de pessoas ordenadas pelo Nome" << endl;
-        cout << "6. Mostrar lista de pessoas ordenadas pela data de nascimento" << endl;
-        cout << "7. Adicionar uma pessoa" << endl;
+        cout << "4. Filtrar pessoas pela cidade" << endl;
+        cout << "5. Mostrar lista de pessoas ordenadas pelo CPF" << endl;
+        cout << "6. Mostrar lista de pessoas ordenadas pelo Nome" << endl;
+        cout << "7. Mostrar lista de pessoas ordenadas pela data de nascimento" << endl;
+        cout << "8. Mostrar lista de pessoas ordenadas pela cidade" << endl;
+        cout << "9. Adicionar uma pessoa" << endl;
         cout << "0. Sair" << endl;
         cout << "Opção: ";
         cin >> opcao;
@@ -320,6 +356,7 @@ int main() {
                 cpf.searchByCPF(n_cpf);
 
                 break;
+
             case 2:
                 std::cout << "Digite o prefixo do nome: ";
                 std::cin.ignore();
@@ -329,6 +366,7 @@ int main() {
                 nome.listByName(prefixo);
                 
                 break;
+
             case 3:
                 cout << "Digite a data inicial (no formato dd/mm/aaaa): ";
                 cin.ignore();
@@ -344,40 +382,59 @@ int main() {
                 data.listDtNasc({dia1, mes1, ano1}, {dia2, mes2, ano2});
 
                 break;
+
             case 4:
+                std::cout << "Digite o prefixo do Cidade: ";
+                std::cin.ignore();
+                std::getline(std::cin, prefixo);
+
+                cout << "Pessoas com a Cidade iniciado por " << prefixo << ":" << endl;
+                cidade.listByCity(prefixo);
+                
+                break;
+
+            case 5:
                 cout << "Lista de pessoas ordenadas pelo CPF:" << endl;
                 cpf.show();
                 break;
-            case 5:
+
+            case 6:
                 std::cout << "Lista de pessoas ordenadas pelo Nome:" << std::endl;
                 nome.show();
                 break;
-            case 6:
+
+            case 7:
                 std::cout << "Lista de pessoas ordenadas pela Data de Nascimento:" << std::endl;
                 data.show();
                 break;
-            case 7:
 
+            case 8:
+                std::cout << "Lista de pessoas ordenadas pela Cidade:" << std::endl;
+                cidade.show();
+                break;
+
+            case 9:
                 cout << "Digite o nome: ";
                 cin.ignore();
                 getline(cin, name);
 
                 cout << "Digite o sobrenome: ";
-                getline(cin, sobrenome);
+                getline(cin, surname);
 
                 cout << "Digite o CPF: ";
                 cin >> num_cpf;
 
                 cout << "Digite a cidade: ";
-                getline(cin, cidade);
+                getline(cin, city);
 
                 cout << "Digite a data de nascimento (no formato dd/mm/aaaa): ";
                 getline(cin, dataNascimento);
                 convertDate(dataNascimento, dia, mes, ano);
 
-                cpf.addCpf(new Pessoa(name, sobrenome, num_cpf, cidade, {dia, mes, ano}));
-                nome.addNome(new Pessoa(name, sobrenome, num_cpf, cidade, {dia, mes, ano}));
-                data.addData(new Pessoa(name, sobrenome, num_cpf, cidade, {dia, mes, ano}));
+                cpf.addCpf(new Pessoa(name, surname, num_cpf, city, {dia, mes, ano}));
+                nome.addNome(new Pessoa(name, surname, num_cpf, city, {dia, mes, ano}));
+                data.addData(new Pessoa(name, surname, num_cpf, city, {dia, mes, ano}));
+                cidade.addCidade(new Pessoa(name, surname, num_cpf, city, {dia, mes, ano}));
 
                 cout << "Pessoa adicionada com sucesso!" << endl;         
                 
@@ -385,6 +442,7 @@ int main() {
             case 0:
                 cout << "Encerrando o programa." << endl;
                 break;
+
             default:
                 cout << "Opção inválida. Tente novamente." << endl;
                 break;
@@ -397,6 +455,7 @@ int main() {
     cpf.clear();
     nome.clear();
     data.clear();
+    cidade.clear();
 
     return 0;
 }
