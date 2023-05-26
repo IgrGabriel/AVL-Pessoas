@@ -1,10 +1,15 @@
 #include <iostream>
+
 #include "node.h"
 #include "avl.h"
 #include "arq.h"
+#include "comparators.h"
+#include "auxFuncs.h"
 
 #include <iomanip> // Para std::setfill() e std::setw()
 #include <cctype> // Para std::tolower()
+
+#include <string>
 
 using namespace std;
 
@@ -94,56 +99,6 @@ Node* avl_tree::rebalance(Node *node){
     return node;
 }
 
-// Functor para comparar CPFs
-struct CompareCpf{
-    bool operator()(const Pessoa* a, const Pessoa* b) const {
-        return a->getCpf() > b->getCpf();
-    }
-};
-
-
-// #TODO: Considerar o nome completo(nome + sobrenome)
-// #TODO: Tratar o quando houver a add de nomes iguais
-// Functor para comparar Nomes
-struct CompareNome{
-    bool operator()(const Pessoa* a, const Pessoa* b) const {
-        return a->getNome() > b->getNome();
-    }
-};
-
-
-// Compara duas datas e retorna 1 se a primeira for maior que a segunda, -1 se a primeira for menor que a segunda e 0 se forem iguais
-int dataCompare(const Data& data1, const Data& data2) {
-    if(data1.ano > data2.ano) 
-        return 1; 
-    else if(data1.ano < data2.ano) 
-        return -1;
-    else {
-        if(data1.mes > data2.mes)
-            return 1;
-        else if(data1.mes < data2.mes)
-            return -1;
-        else {
-            if(data1.dia > data2.dia)
-                return 1;
-            else if(data1.dia < data2.dia)
-                return -1;
-            else
-                return 0;
-        }
-    }
-    
-}
-
-
-// Functor para comparar Datas
-struct CompareData{
-    bool operator()(const Pessoa* a, const Pessoa* b) const {
-        return dataCompare(a->getDtNascimento(), b->getDtNascimento()) == 1;
-    }
-};
-
-
 // Funcao generica add
 template <typename T>
 Node* avl_tree::add(Node *node, Pessoa *pessoa, T comparator) {
@@ -179,57 +134,6 @@ void avl_tree::addData(Pessoa *pessoa) {
     root = add(root, pessoa, compData);
 }
 
-
-// Remover uma pessoa da arvore usando o cpf com chave
-// Node* avl_tree::remove(Node *node, int cpf) {
-//     if(node == nullptr) // Node nao encontrado
-//         return nullptr;
-//     else { // procura o node a remover
-//         if(node->pessoa->cpf == cpf){
-//             // remover node folhas (node sem filhos)
-//             if(node->right == nullptr && node->left == nullptr){
-//                 delete node;
-//                 return nullptr;
-//             } else { // remove node com filhos
-//                 // remover node com 2 filhos
-//                 if(node->right != nullptr && node->left != nullptr){
-//                     Node *aux = node->left;
-//                     while(aux->right != nullptr)
-//                         aux = aux->right;
-//                     node->pessoa->cpf = aux->pessoa->cpf;
-//                     aux->pessoa->cpf = cpf;
-//                     node->left = remove(node->left, cpf);
-//                     return node;
-//                 } 
-//                 else {
-//                     // remover nodes que possuem apenas 1 filho
-//                     Node *aux;
-//                     if(node->right != nullptr)
-//                         aux = node->right;
-//                     else
-//                         aux = node->left;
-//                     delete node;
-//                     return aux;
-//                 }
-//             }
-//         } else {
-//             if(cpf > node->pessoa->cpf) 
-//                 node->right = remove(node->right, cpf);
-//             else
-//                 node->left = remove(node->left, cpf);
-//         }
-        
-//         // recalcula a altur de todos os nodes entre a raiz e o novo node inserido
-//         node->height = max(height(node->left), height(node->right)) + 1;
-
-//         // verifica a necessidade de rebalancear a arvore
-//         node = rebalance(node);
-
-//         return node;
-//     }
-// }
-
-
 // funcao publica para buscar uma pessoa na arvore pelo seu cpf
 void avl_tree::searchByCPF(long long int cpf) {
     listPessoas(searchByCPF(root, cpf));
@@ -251,18 +155,6 @@ Node* avl_tree::searchByCPF(Node *node, long long int cpf) {
         
         return node;
     }
-}
-
-
-// Funcao auxiliar para converter uma string em minuslas
-// Usada na funcao listByName
-string stringToLower(const string& str){
-    string lowerStr = str;
-
-    for(char& c : lowerStr)
-        c = tolower(c);
-    
-    return lowerStr;
 }
 
 
@@ -314,16 +206,6 @@ void avl_tree::listDtNasc(Node *node, const Data& dtInicio, const Data& dtFinal)
 
     // verifica se o node direito esta dentro do intervalo
     listDtNasc(node->right, dtInicio, dtFinal);
-}
-
-// #TODO: Tratar quando CPF tiver menos que 11 digitos (add 0's na frente do cpf)
-void formatCPF(long long int cpf) {
-    string cpfStr = to_string(cpf);
-
-    cout << cpfStr.substr(0, 3) << ".";
-    cout << cpfStr.substr(3, 3) << ".";
-    cout << cpfStr.substr(6, 3) << "-";
-    cout << cpfStr.substr(9, 2);
 }
 
 
@@ -396,6 +278,7 @@ avl_tree::~avl_tree() {
     clear();
 }
 
+
 int main() {
     avl_tree cpf, nome, data;
 
@@ -403,33 +286,113 @@ int main() {
     CompareNome compNome;
     CompareData compData;
 
-    cout << "---------------------------- CPF ----------------------------\n" << endl;
-
     string nomeArquivo = "data.csv";
+    
     cpf.lerArquivoCSV(nomeArquivo, compCpf);
-    cpf.addCpf(new Pessoa("Igor", "Gabriel", 62545698702, "Baturite", {10, 9, 2001}));
-    cpf.show();
-
-    cout << "\n>> Busca por CPF: \n" << endl;
-    cpf.searchByCPF(71537946897);
-
-    cout << "\n---------------------------- Nome ----------------------------\n" << endl;
-
-    nome.lerArquivoCSV(nomeArquivo, compNome);
-    nome.addNome(new Pessoa("Igor", "Gabriel", 62545698702, "Baturite", {10, 9, 2001}));
-    nome.show();
-
-    cout << "\n>> Busca por Nome: \n" << endl;
-    nome.listByName("i");
-
-    cout << "\n---------------------------- Data ----------------------------\n" << endl;
-
     data.lerArquivoCSV(nomeArquivo, compData);
-    data.addData(new Pessoa("Igor", "Gabriel", 62545698702, "Baturite", {10, 9, 2001}));
-    data.show();
+    nome.lerArquivoCSV(nomeArquivo, compNome);
+    
+    string prefixo, dataInicial, dataFinal, name, sobrenome, cidade, dataNascimento;
+    int dia, mes, ano, dia1, mes1, ano1, dia2, mes2, ano2;
+    long long int num_cpf;
 
-    cout << "\n>> Busca por Data: \n" << endl;
-    data.listDtNasc({15, 3, 1946}, {2, 7, 1956});
+    int opcao;
+    do {
+        cout << "Selecione uma opção:" <<endl;
+        cout << "1. Consultar uma pessoa pelo CPF" << endl;
+        cout << "2. Consultar pessoas pelo prefixo do nome" << endl;
+        cout << "3. Consultar pessoas pelo intervalo de data de nascimento" << endl;
+        cout << "4. Mostrar lista de pessoas ordenadas pelo CPF" << endl;
+        cout << "5. Mostrar lista de pessoas ordenadas pelo Nome" << endl;
+        cout << "6. Mostrar lista de pessoas ordenadas pela data de nascimento" << endl;
+        cout << "7. Adicionar uma pessoa" << endl;
+        cout << "0. Sair" << endl;
+        cout << "Opção: ";
+        cin >> opcao;
+
+        switch (opcao) {
+            case 1:
+                long long int n_cpf;
+                cout << "Digite o CPF da pessoa: (apenas numeros)";
+
+                cin >> n_cpf;
+
+                cpf.searchByCPF(n_cpf);
+
+                break;
+            case 2:
+                std::cout << "Digite o prefixo do nome: ";
+                std::cin.ignore();
+                std::getline(std::cin, prefixo);
+
+                cout << "Pessoas com nome iniciado por " << prefixo << ":" << endl;
+                nome.listByName(prefixo);
+                
+                break;
+            case 3:
+                cout << "Digite a data inicial (no formato dd/mm/aaaa): ";
+                cin.ignore();
+                getline(cin, dataInicial);
+                cout << "Digite a data final (no formato dd/mm/aaaa): ";
+                getline(cin, dataFinal);
+
+                convertDate(dataInicial, dia1, mes1, ano1);
+                convertDate(dataFinal, dia2, mes2, ano2);
+
+                cout << "Pessoas com data de nascimento entre " << dataInicial << " e " << dataFinal << ":" << endl;
+
+                data.listDtNasc({dia1, mes1, ano1}, {dia2, mes2, ano2});
+
+                break;
+            case 4:
+                cout << "Lista de pessoas ordenadas pelo CPF:" << endl;
+                cpf.show();
+                break;
+            case 5:
+                std::cout << "Lista de pessoas ordenadas pelo Nome:" << std::endl;
+                nome.show();
+                break;
+            case 6:
+                std::cout << "Lista de pessoas ordenadas pela Data de Nascimento:" << std::endl;
+                data.show();
+                break;
+            case 7:
+
+                cout << "Digite o nome: ";
+                cin.ignore();
+                getline(cin, name);
+
+                cout << "Digite o sobrenome: ";
+                getline(cin, sobrenome);
+
+                cout << "Digite o CPF: ";
+                cin >> num_cpf;
+
+                cout << "Digite a cidade: ";
+                getline(cin, cidade);
+
+                cout << "Digite a data de nascimento (no formato dd/mm/aaaa): ";
+                getline(cin, dataNascimento);
+                convertDate(dataNascimento, dia, mes, ano);
+
+                cpf.addCpf(new Pessoa(name, sobrenome, num_cpf, cidade, {dia, mes, ano}));
+                nome.addNome(new Pessoa(name, sobrenome, num_cpf, cidade, {dia, mes, ano}));
+                data.addData(new Pessoa(name, sobrenome, num_cpf, cidade, {dia, mes, ano}));
+
+                cout << "Pessoa adicionada com sucesso!" << endl;         
+                
+                break;
+            case 0:
+                cout << "Encerrando o programa." << endl;
+                break;
+            default:
+                cout << "Opção inválida. Tente novamente." << endl;
+                break;
+        }
+
+        cout << endl;
+
+    } while (opcao != 0);
 
     cpf.clear();
     nome.clear();
