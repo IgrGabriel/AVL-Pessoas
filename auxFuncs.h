@@ -1,8 +1,10 @@
 #ifndef AUXFUNCS_H
 #define AUXFUNCS_H
 
-// converte um cpf no formato XXX.XXX.XXX-XX para um valor numerico
-// usado na funcao lerArquivoCSV de arq.h
+#include <iomanip> // Para std::setfill() e std::setw()
+
+// Converte um cpf no formato XXX.XXX.XXX-XX para um valor numerico
+// Usado na funcao lerArquivoCSV de arq.h
 long long int convertCpf(const std::string& cpf) {
     std::string cpfNumerico;
 
@@ -22,7 +24,8 @@ long long int convertCpf(const std::string& cpf) {
 }
 
 
-// converte uma string no formato DD/MM/AAAA para as variaveis dia, mes e ano
+// Converte uma string no formato DD/MM/AAAA para as variaveis dia, mes e ano
+// Usado na funcao lerArquivoCSV de arq.h e na funcao main de main.h
 void convertDate(const std::string& data, int& dia, int& mes, int& ano) {
     std::stringstream ss(data);
     char delimiter;
@@ -30,9 +33,14 @@ void convertDate(const std::string& data, int& dia, int& mes, int& ano) {
 }
 
 
-// #TODO: Tratar quando CPF tiver menos que 11 digitos (add 0's na frente do cpf)
+// Formata um CPF numérico no formato "XXX.XXX.XXX-XX" e imprime o resultado na saída padrão. 
+// Usada na funcao showPessoa e listPessoas de avl.cpp
 void formatCPF(long long int cpf) {
-    std::string cpfStr = to_string(cpf);
+    // std::string cpfStr = to_string(cpf);
+    //  Adiciona zeros a esquerda, garantindo que o CPF tenha exatamente 11 digitos.
+    std::stringstream ss;
+    ss << std::setw(11) << std::setfill('0') << cpf;
+    std::string cpfStr = ss.str();
 
     std::cout << cpfStr.substr(0, 3) << ".";
     std::cout << cpfStr.substr(3, 3) << ".";
@@ -54,6 +62,7 @@ std::string stringToLower(const std::string& str){
 
 
 // Compara duas datas e retorna 1 se a primeira for maior que a segunda, -1 se a primeira for menor que a segunda e 0 se forem iguais
+// Usada na funcao listDtNasc de avl.cpp e no functor CompareData de comparators.h
 int dataCompare(const Data& data1, const Data& data2) {
     if(data1.ano > data2.ano) 
         return 1; 
