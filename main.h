@@ -2,8 +2,8 @@
 #define MAIN_H
 
 #include <iostream>
-#include <limits>
-#include <cstdlib>
+#include <limits> // Para std::streamsize
+#include <cstdlib> // Para executar comandos do SO para limpar a tela
 
 // Limpa a tela
 void clearScreen() {
@@ -12,9 +12,6 @@ void clearScreen() {
     #else
         system("clear");
     #endif
-
-    std::cout << std::endl;
-    std::cout << "--------------------------------------------" << std::endl;
 }
 
 //  Aguardar a entrada do usuario 
@@ -71,8 +68,10 @@ int main() {
     do {
         if (opcao == -1)
             programName();
-        else
+        else {
             clearScreen();
+            std::cout << "\n--------------------------------------------" << std::endl;
+        }
 
         displayMenu();
         std::cin >> opcao;
@@ -119,11 +118,11 @@ int main() {
                 break;
 
             case 4:
-                std::cout << "\nDigite o prefixo do Cidade: ";
+                std::cout << "\nDigite o nome da Cidade: ";
                 std::cin.ignore();
                 std::getline(std::cin, prefixo);
 
-                std::cout << "\nPessoas com a Cidade iniciado por " << prefixo << ":\n" << std::endl;
+                std::cout << "\nPessoa que moram em Cidades iniciadas por " << prefixo << ":\n" << std::endl;
                 cidade.listByCity(prefixo);
                 waitForInput();
                 break;
@@ -159,7 +158,7 @@ int main() {
                 std::cout << "Digite o sobrenome: ";
                 std::getline(std::cin, surname);
 
-                std::cout << "Digite o CPF: ";
+                std::cout << "Digite o CPF (apenas numeros, sem zeros a esquerda): ";
                 std::cin >> num_cpf;
 
                 std::cout << "Digite a cidade: ";
